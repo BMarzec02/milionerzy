@@ -76,8 +76,7 @@ let currentQuestion = null;
 
 // Inicjalizacja pierwszego pytania (ale tylko po kliknięciu start)
 window.addEventListener('load', () => {
-    // Odtwórz dźwięk opening po załadowaniu strony
-    playSound('opening');
+    // Strona załadowana - gotowa do gry
 });
 
 const prizeLadder = [
@@ -153,27 +152,32 @@ function draw() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // Rysowanie wzoru hexagonalnego w tle
-    drawHexagonalPattern();
-
-    // Logo z efektem świecenia
+    drawHexagonalPattern();    // Logo z efektem świecenia
     ctx.shadowColor = colors.highlight;
     ctx.shadowBlur = 20;
     ctx.fillStyle = colors.text;
-    const fontSize = Math.min(window.innerWidth * 0.1, 90);
+    // Większy rozmiar logo na ekranie startowym
+    const fontSize = gameState === 'start' 
+        ? Math.min(window.innerWidth * 0.15, 230)  // Większy na start screen
+        : Math.min(window.innerWidth * 0.1, 90);   // Normalny podczas gry
+    // Różna pozycja logo - na start screen więcej w środku, podczas gry na górze
+    const logoY = gameState === 'start' 
+        ? window.innerHeight * 0.25  // Niżej, bardziej na środku na start screen
+        : window.innerHeight * 0.1;  // Na górze podczas gry
     ctx.font = `bold ${fontSize}px Arial`;
     ctx.textAlign = 'center';
-    ctx.fillText('MILIONERZY', canvas.width / 2, window.innerHeight * 0.1);
-    ctx.shadowBlur = 0;
-
-    if (gameState === 'start') {
+    ctx.fillText('MILIONERZY', canvas.width / 2, logoY);
+    ctx.shadowBlur = 0;if (gameState === 'start') {
         // Ekran startowy
         drawStartScreen();
     } else {
         // Koła ratunkowe (rysowane przed drabinką, aby były pod nią)
         drawLifelines();
-        
-        // Rysowanie drabinki z kwotami
+          // Rysowanie drabinki z kwotami
         drawPrizeLadder();
+        
+        // Rysowanie przycisku rezygnacji
+        drawQuitButton();
 
         if (currentQuestion) {
             // Pytanie - nowy design jak w milionerach
@@ -184,8 +188,7 @@ function draw() {
             const letters = ['A', 'B', 'C', 'D'];
             answerBoxes.forEach((box, index) => {
                 // Rysowanie tła odpowiedzi w stylu milionerów
-                drawMillionaireAnswerBox(box, index, answers[index], letters[index], selectedAnswer === index);
-            });
+                drawMillionaireAnswerBox(box, index, answers[index], letters[index], selectedAnswer === index);            });
         } // zamknięcie if (currentQuestion)
     }
 }
@@ -353,32 +356,63 @@ function drawAnswerBox(box, index, answer, letter, isSelected) {
 
 // Funkcja rysująca drabinkę z kwotami
 function drawPrizeLadder() {
-    const ladderWidth = window.innerWidth * 0.2;
+    const ladderWidth = window.innerWidth * 0.12;
     const startX = canvas.width - ladderWidth;
     const startY = window.innerHeight * 0.02 + 20; // Przesunięcie o 20px w dół
     const height = window.innerHeight * 0.035;
     const fontSize = Math.min(window.innerWidth * 0.015, 18);
     
     prizeLadder.forEach((prize, index) => {
-        const y = startY + (index * height);
+        const y = startY + (index * height);        
         const isCurrentPrize = (prizeLadder.length - 1 - index) === currentQuestionIndex;
-        
-        if (isCurrentPrize) {
-            ctx.fillStyle = colors.highlight;
-            ctx.fillRect(startX - ladderWidth * 0.1, y - height * 0.6, ladderWidth * 1.1, height);
+        const questionNumber = prizeLadder.length - index; // Numeracja od 1 do 12
+          if (isCurrentPrize && (gameState === 'playing' || gameState === 'checking')) {
+            // Pomarańczowo-złote tło dla aktualnego poziomu (jak przycisk rezygnacji)
+            const frameWidth = ladderWidth * 1.25; // Szerokość obejmująca numer i kwotę
+            const frameHeight = height * 0.8;
+            const frameX = startX - ladderWidth * 0.28; // Zaczyna się od numeru pytania
+            const frameY = y - height * 0.4;
+            
+            // Kształt hexagonalny jak w przycisku rezygnacji
+            const hexHeight = frameHeight * 0.3;
+            
+            ctx.beginPath();
+            ctx.moveTo(frameX + hexHeight, frameY);
+            ctx.lineTo(frameX + frameWidth - hexHeight, frameY);
+            ctx.lineTo(frameX + frameWidth, frameY + hexHeight);
+            ctx.lineTo(frameX + frameWidth, frameY + frameHeight - hexHeight);
+            ctx.lineTo(frameX + frameWidth - hexHeight, frameY + frameHeight);
+            ctx.lineTo(frameX + hexHeight, frameY + frameHeight);
+            ctx.lineTo(frameX, frameY + frameHeight - hexHeight);
+            ctx.lineTo(frameX, frameY + hexHeight);
+            ctx.closePath();
+            
+            // Gradient tła jak w przycisku rezygnacji
+            const gradient = ctx.createLinearGradient(frameX, frameY, frameX, frameY + frameHeight);
+            gradient.addColorStop(0, '#cc6600');
+            gradient.addColorStop(0.3, '#994400');
+            gradient.addColorStop(0.7, '#cc6600');
+            gradient.addColorStop(1, '#994400');
+            
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Obramowanie jak w przycisku rezygnacji
+            ctx.strokeStyle = '#ffaa00';
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
         
+        // Numeracja pytań po lewej stronie
+        ctx.fillStyle = isCurrentPrize ? '#FFD700' : '#CCCCCC';
+        ctx.font = isCurrentPrize ? `bold ${fontSize}px Arial` : `${fontSize}px Arial`;
+        ctx.textAlign = 'left';
+        ctx.fillText(`${questionNumber}.`, startX - ladderWidth * 0.25, y);
+          // Kwota po prawej stronie
         ctx.fillStyle = prize.guaranteed ? '#FFD700' : colors.text;
         ctx.font = isCurrentPrize ? `bold ${fontSize}px Arial` : `${fontSize}px Arial`;
         ctx.textAlign = 'right';
         ctx.fillText(prize.amount, startX + ladderWidth * 0.9, y);
-        
-        if (prize.guaranteed) {
-            ctx.fillStyle = '#FFD700';
-            ctx.beginPath();
-            ctx.arc(startX - 5, y - 5, 3, 0, Math.PI * 2);
-            ctx.fill();
-        }
     });
 }
 
@@ -503,25 +537,25 @@ function useAskAudience() {
 canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;    if (gameState === 'start') {
+    const y = e.clientY - rect.top;    
+    
+    if (gameState === 'start') {
         // Sprawdzanie kliknięcia w przycisk start
         if (x >= questionBox.x && x <= questionBox.x + questionBox.width &&
             y >= questionBox.y && y <= questionBox.y + questionBox.height) {
             startGame();
         }
-        
-        // Sprawdzanie kliknięcia w "Bartłomiej Marzec" (drugi box z kredytami)
-        if (answerBoxes.length > 1) {
-            const bartlomiejBox = answerBoxes[1]; // drugi box zawiera "Bartłomiej Marzec"
+          // Sprawdzanie kliknięcia w "Bartłomiej Marzec" (trzeci box z kredytami)
+        if (answerBoxes.length > 2) {
+            const bartlomiejBox = answerBoxes[2]; // trzeci box zawiera "Bartłomiej Marzec"
             if (x >= bartlomiejBox.x && x <= bartlomiejBox.x + bartlomiejBox.width &&
                 y >= bartlomiejBox.y && y <= bartlomiejBox.y + bartlomiejBox.height) {
                 // Otwórz GitHub repository
                 window.open('https://github.com/BMarzec02/milionerzy', '_blank');
             }
-        }
-        return;
+        }return;
     }
-
+    
     // Sprawdzanie kliknięć w odpowiedzi
     answerBoxes.forEach((box, index) => {
         if (x >= box.x && x <= box.x + box.width &&
@@ -530,7 +564,17 @@ canvas.addEventListener('click', (e) => {
                 selectedAnswer = index;
                 checkAnswer();
             }
-        }    });
+        }    
+    });
+      // Sprawdzanie kliknięcia w przycisk rezygnacji
+    if (gameState === 'playing' || gameState === 'checking') {
+        const quitButton = drawQuitButton();
+        if (quitButton && x >= quitButton.x && x <= quitButton.x + quitButton.width &&
+            y >= quitButton.y && y <= quitButton.y + quitButton.height) {
+            handleQuitButtonClick();
+            return;
+        }
+    }
     
     // Sprawdzanie kliknięć w koła ratunkowe
     if (gameState === 'playing') {
@@ -575,12 +619,15 @@ function checkAnswer() {
             // Nasłuchuj na zakończenie melodii "good"
             const goodSound = sounds.good;
             const onGoodEnded = () => {
-                goodSound.removeEventListener('ended', onGoodEnded);
-                
-                if (currentQuestionIndex === prizeLadder.length - 1) {
+                goodSound.removeEventListener('ended', onGoodEnded);                if (currentQuestionIndex === prizeLadder.length - 1) {
                     gameState = 'won';
-                    alert('Gratulacje! Wygrałeś milion złotych!');
-                    resetGame();
+                    const playAgain = confirm('Gratulacje! Wygrałeś milion złotych!\n\nKliknij "OK" aby zagrać ponownie lub "Anuluj" aby zakończyć.');
+                    if (playAgain) {
+                        resetGameDirect();
+                        startGame();
+                    } else {
+                        resetGame();
+                    }
                 } else {
                     // Przejdź do kolejnego pytania dopiero po zakończeniu melodii
                     currentQuestionIndex++;
@@ -598,12 +645,15 @@ function checkAnswer() {
             // Stan 3: Błędna odpowiedź - zaznaczona na czerwono, poprawna na zielono
             answerState = 'wrong';
             playSound('wrong');
-            
-            setTimeout(() => {
-                gameState = 'lost';
-                const guaranteedPrize = getGuaranteedPrize();
-                alert(`Niestety, to nie jest poprawna odpowiedź. Wygrywasz ${guaranteedPrize}!`);
-                resetGame();
+              setTimeout(() => {
+                gameState = 'lost';                const guaranteedPrize = getGuaranteedPrize();
+                const playAgain = confirm(`Niestety, to nie jest poprawna odpowiedź. Wygrywasz ${guaranteedPrize}!\n\nKliknij "OK" aby zagrać ponownie lub "Anuluj" aby zakończyć.`);
+                if (playAgain) {
+                    resetGameDirect();
+                    startGame();
+                } else {
+                    resetGame();
+                }
             }, 3000);
         }
     }, randomDelay);
@@ -626,6 +676,46 @@ function resetGame() {
     lifelineFiftyFifty = true;
     lifelineAskAudience = true;
     lifelinePhoneFriend = true;
+}
+
+// Reset gry z pominięciem ekranu startowego
+function resetGameDirect() {
+    currentQuestionIndex = 0;
+    selectedAnswer = null;
+    answerState = '';
+    currentQuestion = null;
+    lifelineFiftyFifty = true;
+    lifelineAskAudience = true;
+    lifelinePhoneFriend = true;
+}
+
+// Obsługa kliknięcia przycisku rezygnacji
+function handleQuitButtonClick() {
+    // Aktualna kwota to kwota za ostatnie poprawnie odpowiedziane pytanie
+    const currentPrize = currentQuestionIndex > 0 ? prizeLadder[prizeLadder.length - currentQuestionIndex].amount : '0 zł';
+    const guaranteedPrize = getGuaranteedPrize();
+    
+    const shouldQuit = confirm(`Czy na pewno chcesz rezygnować?\n\nAktualna kwota: ${currentPrize}\nGwarantowana kwota: ${guaranteedPrize}\n\nKliknij "OK" aby rezygnować lub "Anuluj" aby grać dalej.`);    if (shouldQuit) {
+        gameState = 'quit';
+        // Przy rezygnacji gracz otrzymuje aktualną kwotę (za ostatnie poprawnie odpowiedziane pytanie)
+        // lub gwarantowaną kwotę, jeśli jest wyższa
+        const actualPrize = currentQuestionIndex > 0 ? prizeLadder[prizeLadder.length - currentQuestionIndex].amount : '0 zł';
+        const guaranteedPrize = getGuaranteedPrize();
+        
+        // Wybierz wyższą z aktualnej i gwarantowanej kwoty
+        const finalPrize = currentQuestionIndex > 0 && 
+            parseInt(actualPrize.replace(/\D/g, '')) >= parseInt(guaranteedPrize.replace(/\D/g, '')) 
+            ? actualPrize : guaranteedPrize;
+            
+        const playAgain = confirm(`Dziękujemy za grę! Wygrywasz ${finalPrize}!\n\nKliknij "OK" aby zagrać ponownie lub "Anuluj" aby zakończyć.`);
+        if (playAgain) {
+            resetGameDirect();
+            startGame();
+        } else {
+            resetGame();
+        }
+    }
+    // Jeśli nie - gra trwa dalej
 }
 
 // Rozpoczęcie gry
@@ -676,8 +766,7 @@ function drawMillionaireQuestionBox() {
     ctx.strokeStyle = '#0066cc';
     ctx.lineWidth = 1;
     ctx.stroke();
-    
-    // Tekst pytania
+      // Tekst pytania
     ctx.fillStyle = colors.text;
     const questionFontSize = Math.min(window.innerWidth * 0.025, 24);
     ctx.font = `bold ${questionFontSize}px Arial`;
@@ -891,9 +980,9 @@ function drawStartButton() {
 // Funkcja rysująca kredyty
 function drawCredits() {
     const credits = [
-        "Gra stworzona przez",
-        "Bartłomiej Marzec",
+        "Gra stworzona przez:",
         "Interaktywne aplikacje multimedialne",
+        "Bartłomiej Marzec",
         "Uniwersytet śląski: informatyka"
     ];
     
@@ -948,4 +1037,65 @@ function drawCreditBox(box, creditText) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(creditText, box.x + (box.width / 2), box.y + (box.height / 2));
+}
+
+// Funkcja rysująca przycisk rezygnacji (w stylu kół ratunkowych)
+function drawQuitButton() {
+    if (gameState !== 'playing' && gameState !== 'checking') return;
+    
+    const ladderWidth = window.innerWidth * 0.12;
+    const startX = canvas.width - ladderWidth;
+    const buttonWidth = ladderWidth * 0.9;
+    const buttonHeight = window.innerHeight * 0.04;
+    const buttonX = startX + (ladderWidth - buttonWidth) / 2 - 25; // Przesunięcie o 15 pikseli w lewo
+    const buttonY = window.innerHeight * 0.02 + 20 + (prizeLadder.length * window.innerHeight * 0.035); // Pod drabinką z kwotami
+    
+    // Zaokrąglony prostokąt w stylu kół ratunkowych
+    const cornerRadius = buttonHeight * 0.5; // Silnie zaokrąglone rogi
+    
+    ctx.beginPath();
+    ctx.moveTo(buttonX + cornerRadius, buttonY);
+    ctx.lineTo(buttonX + buttonWidth - cornerRadius, buttonY);
+    ctx.quadraticCurveTo(buttonX + buttonWidth, buttonY, buttonX + buttonWidth, buttonY + cornerRadius);
+    ctx.lineTo(buttonX + buttonWidth, buttonY + buttonHeight - cornerRadius);
+    ctx.quadraticCurveTo(buttonX + buttonWidth, buttonY + buttonHeight, buttonX + buttonWidth - cornerRadius, buttonY + buttonHeight);
+    ctx.lineTo(buttonX + cornerRadius, buttonY + buttonHeight);
+    ctx.quadraticCurveTo(buttonX, buttonY + buttonHeight, buttonX, buttonY + buttonHeight - cornerRadius);
+    ctx.lineTo(buttonX, buttonY + cornerRadius);
+    ctx.quadraticCurveTo(buttonX, buttonY, buttonX + cornerRadius, buttonY);
+    ctx.closePath();
+    
+    // Gradient radialny jak w kołach ratunkowych
+    const centerX = buttonX + buttonWidth / 2;
+    const centerY = buttonY + buttonHeight / 2;
+    const radius = Math.max(buttonWidth, buttonHeight) / 2;
+    
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient.addColorStop(0, 'rgba(0, 153, 255, 0.8)');
+    gradient.addColorStop(1, 'rgba(0, 51, 102, 0.8)');
+    
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    // Obramowanie jak w kołach ratunkowych
+    ctx.strokeStyle = colors.highlight; // '#0099FF'
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Tekst "Rezygnuję" zamiast ikony drzwi
+    ctx.fillStyle = colors.text;
+    const textSize = Math.min(window.innerWidth * 0.012, 14);
+    ctx.font = `bold ${textSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Rezygnuję', centerX, centerY);
+    
+    // Efekt świecenia jak w aktywnych kołach ratunkowych
+    ctx.shadowColor = colors.highlight;
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    
+    // Zwracamy pozycję przycisku dla obsługi kliknięć
+    return { x: buttonX, y: buttonY, width: buttonWidth, height: buttonHeight };
 }

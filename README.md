@@ -12,10 +12,7 @@
 
 ## ✨ Funkcjonalności
 -  **12 poziomów pytań** z rosnącymi nagrodami (od 500 zł do 1 000 000 zł)
--  **3 koła ratunkowe**: 
-  -  50:50 
-  -  Telefon do Przyjaciela 
-  -  Pytanie do Publiczności
+-  **3 koła ratunkowe**  
 -  **Efekty dźwiękowe** dla różnych akcji w grze
 -  **Responsywny design** dostosowany do różnych rozdzielczości
 -  **Wzornictwo** inspirowane oryginalnym teleturniejem
@@ -27,12 +24,12 @@
 ## 🚀 Uruchomienie
 
 ### 🌐 Gra dostępna online:
-👉 **[https://milionerzy.vercel.app/](https://milionerzy.vercel.app/)**
+👉 **[milionerzy.pl](https://milionerzy.vercel.app/)**
 
 ### 💻 Uruchomienie lokalne:
 1.  Sklonuj repozytorium
 2.  Otwórz plik `index.html` w przeglądarce internetowej
-3.  Rozpocznij grę klikając przycisk **"START"**
+3.  Rozpocznij grę klikając przycisk **"Zacznij grę"**
 
 ## 👨‍💻 Autor
 **Bartłomiej Marzec** - projekt realizowany w ramach studiów
