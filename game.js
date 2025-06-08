@@ -54,30 +54,23 @@ window.addEventListener('resize', resizeCanvas);
 const colors = {
     background: '#000033',
     text: '#FFFFFF',
-    questionBox: '#000066',
-    answerBox: '#000066',
-    answerHover: '#000099',
-    answerSelected: '#0066CC',
     answerCorrect: '#00CC00',
     answerWrong: '#CC0000',
-    prize: '#FFD700',
     highlight: '#0099FF'
 };
 
 // Stan gry
 let currentQuestionIndex = 0;
 let selectedAnswer = null;
-let gameState = 'start'; // Zaczynamy od ekranu startowego
+let hoveredAnswer = null;
+let hoveredLifeline = null;
+let hoveredQuitButton = false;
+let gameState = 'start';
 let lifelineFiftyFifty = true;
 let lifelineAskAudience = true;
 let lifelinePhoneFriend = true;
 let answerState = ''; // '', 'selected', 'correct', 'wrong'
 let currentQuestion = null;
-
-// Inicjalizacja pierwszego pytania (ale tylko po kliknięciu start)
-window.addEventListener('load', () => {
-    // Strona załadowana - gotowa do gry
-});
 
 const prizeLadder = [
     { amount: '500 zł', guaranteed: false },
@@ -94,7 +87,6 @@ const prizeLadder = [
     { amount: '1 000 000 zł', guaranteed: false }
 ].reverse();
 
-// Pozycje i wymiary
 function getLayoutDimensions() {
     const padding = Math.min(window.innerWidth, window.innerHeight) * 0.05;
     const questionWidth = window.innerWidth * 0.7;
@@ -168,32 +160,25 @@ function draw() {
     ctx.textAlign = 'center';
     ctx.fillText('MILIONERZY', canvas.width / 2, logoY);
     ctx.shadowBlur = 0;if (gameState === 'start') {
-        // Ekran startowy
         drawStartScreen();
     } else {
-        // Koła ratunkowe (rysowane przed drabinką, aby były pod nią)
         drawLifelines();
-          // Rysowanie drabinki z kwotami
         drawPrizeLadder();
-        
-        // Rysowanie przycisku rezygnacji
         drawQuitButton();
 
         if (currentQuestion) {
-            // Pytanie - nowy design jak w milionerach
             drawMillionaireQuestionBox();
 
-            // Odpowiedzi
             const answers = currentQuestion.answers;
             const letters = ['A', 'B', 'C', 'D'];
             answerBoxes.forEach((box, index) => {
-                // Rysowanie tła odpowiedzi w stylu milionerów
-                drawMillionaireAnswerBox(box, index, answers[index], letters[index], selectedAnswer === index);            });
-        } // zamknięcie if (currentQuestion)
+                const isHovered = (hoveredAnswer === index && gameState === 'playing' && selectedAnswer !== index);
+                drawMillionaireAnswerBox(box, index, answers[index], letters[index], selectedAnswer === index, isHovered);
+            });
+        }
     }
 }
 
-// Funkcja pomocnicza do obliczania linii tekstu
 function wrapTextAndGetLines(context, text, maxWidth) {
     const words = text.split(' ');
     let lines = [];
@@ -214,7 +199,6 @@ function wrapTextAndGetLines(context, text, maxWidth) {
     return lines;
 }
 
-// Funkcja pomocnicza do zawijania tekstu
 function wrapText(context, text, x, y, maxWidth) {
     const words = text.split(' ');
     let lines = [];
@@ -236,23 +220,19 @@ function wrapText(context, text, x, y, maxWidth) {
     const lineHeight = context.measureText('M').actualBoundingBoxAscent * 1.5;
     let currentY = y;
 
-    // Rysujemy każdą linię tekstu
     lines.forEach((line, index) => {
-        // Zachowujemy wycentrowanie tekstu w poziomie
         context.fillText(line, x, currentY + (lineHeight * index));
     });
 }
 
-// Rysowanie kół ratunkowych
 function drawLifelines() {    const radius = Math.min(window.innerWidth, window.innerHeight) * 0.045;
     const spacing = radius * 2.5;
     const startX = window.innerWidth * 0.05;
-    const startY = window.innerHeight * 0.05 + 20; // Przesunięcie o 20px w dół
+    const startY = window.innerHeight * 0.05 + 20;
     
-    // Rysowanie kół ratunkowych
-    drawLifelineCircle(startX, startY, radius, lifelineFiftyFifty, '50:50', true); // Pogrubione
-    drawLifelineCircle(startX + spacing, startY, radius, lifelinePhoneFriend, '☎');
-    drawLifelineCircle(startX + spacing * 2, startY, radius, lifelineAskAudience, '📊'); // Biała ikona diamentu
+    drawLifelineCircle(startX, startY, radius, lifelineFiftyFifty, '50:50', true, false, hoveredLifeline === 'fifty'); // Pogrubione
+    drawLifelineCircle(startX + spacing, startY, radius, lifelinePhoneFriend, '☎', false, false, hoveredLifeline === 'phone');
+    drawLifelineCircle(startX + spacing * 2, startY, radius, lifelineAskAudience, '📊', false, false, hoveredLifeline === 'audience'); // Biała ikona diamentu
 }
 
 function drawHexagonalPattern() {
@@ -290,90 +270,24 @@ function getGuaranteedPrize() {
     return '0 zł';
 }
 
-function drawAnswerBox(box, index, answer, letter, isSelected) {
-    if (answer === '') return;
-
-    const cornerRadius = 20;
-    const gradient = ctx.createLinearGradient(box.x, box.y, box.x, box.y + box.height);
-    
-    let baseColor = colors.answerBox;
-    let highlightColor = '#000044';
-    
-    if (gameState === 'checking') {
-        if (index === selectedAnswer) {
-            if (answerState === 'correct') {
-                baseColor = colors.answerCorrect;
-                highlightColor = '#004400';
-            } else if (answerState === 'wrong') {
-                baseColor = colors.answerWrong;
-                highlightColor = '#440000';
-            }
-        }        if (index === currentQuestion.correct && answerState === 'wrong') {
-            baseColor = colors.answerCorrect;
-            highlightColor = '#004400';
-        }
-    } else if (isSelected) {
-        baseColor = colors.answerSelected;
-        highlightColor = '#004488';
-    }
-    
-    gradient.addColorStop(0, baseColor);
-    gradient.addColorStop(1, highlightColor);
-
-    ctx.beginPath();
-    ctx.moveTo(box.x + cornerRadius, box.y);
-    ctx.lineTo(box.x + box.width - cornerRadius, box.y);
-    ctx.quadraticCurveTo(box.x + box.width, box.y, box.x + box.width, box.y + cornerRadius);
-    ctx.lineTo(box.x + box.width, box.y + box.height - cornerRadius);
-    ctx.quadraticCurveTo(box.x + box.width, box.y + box.height, box.x + box.width - cornerRadius, box.y + box.height);
-    ctx.lineTo(box.x + cornerRadius, box.y + box.height);
-    ctx.quadraticCurveTo(box.x, box.y + box.height, box.x, box.y + box.height - cornerRadius);
-    ctx.lineTo(box.x, box.y + cornerRadius);
-    ctx.quadraticCurveTo(box.x, box.y, box.x + cornerRadius, box.y);
-    ctx.closePath();
-
-    ctx.fillStyle = gradient;
-    ctx.fill();
-    ctx.strokeStyle = isSelected ? colors.highlight : 'rgba(0, 153, 255, 0.3)';
-    ctx.lineWidth = 2;
-    ctx.stroke();    // Tekst odpowiedzi
-    if (answer !== '') {  // Rysuj tekst tylko jeśli odpowiedź nie jest pusta
-        ctx.fillStyle = colors.text;
-        const answerFontSize = Math.min(window.innerWidth * 0.02, 22);
-        ctx.font = `bold ${answerFontSize}px Arial`;
-        ctx.textAlign = 'left';
-        const padding = Math.min(window.innerWidth * 0.02, 20);
-        ctx.fillText(`${letter}: ${answer}`, box.x + padding, box.y + (box.height/2) + answerFontSize/3);
-    }
-
-    if (isSelected || (gameState === 'checking' && index === currentQuestion.correct)) {
-        ctx.shadowColor = colors.highlight;
-        ctx.shadowBlur = 10;
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-    }
-}
-
 // Funkcja rysująca drabinkę z kwotami
 function drawPrizeLadder() {
     const ladderWidth = window.innerWidth * 0.12;
     const startX = canvas.width - ladderWidth;
-    const startY = window.innerHeight * 0.02 + 20; // Przesunięcie o 20px w dół
+    const startY = window.innerHeight * 0.02 + 20;
     const height = window.innerHeight * 0.035;
     const fontSize = Math.min(window.innerWidth * 0.015, 18);
     
     prizeLadder.forEach((prize, index) => {
         const y = startY + (index * height);        
         const isCurrentPrize = (prizeLadder.length - 1 - index) === currentQuestionIndex;
-        const questionNumber = prizeLadder.length - index; // Numeracja od 1 do 12
-          if (isCurrentPrize && (gameState === 'playing' || gameState === 'checking')) {
-            // Pomarańczowo-złote tło dla aktualnego poziomu (jak przycisk rezygnacji)
-            const frameWidth = ladderWidth * 1.25; // Szerokość obejmująca numer i kwotę
+        const questionNumber = prizeLadder.length - index;
+          if (isCurrentPrize && (gameState === 'playing' || gameState === 'checking')) {        
+            const frameWidth = ladderWidth * 1.25;
             const frameHeight = height * 0.8;
-            const frameX = startX - ladderWidth * 0.28; // Zaczyna się od numeru pytania
+            const frameX = startX - ladderWidth * 0.28;
             const frameY = y - height * 0.4;
             
-            // Kształt hexagonalny jak w przycisku rezygnacji
             const hexHeight = frameHeight * 0.3;
             
             ctx.beginPath();
@@ -386,8 +300,8 @@ function drawPrizeLadder() {
             ctx.lineTo(frameX, frameY + frameHeight - hexHeight);
             ctx.lineTo(frameX, frameY + hexHeight);
             ctx.closePath();
-            
-            // Gradient tła jak w przycisku rezygnacji
+
+            // Gradient tła
             const gradient = ctx.createLinearGradient(frameX, frameY, frameX, frameY + frameHeight);
             gradient.addColorStop(0, '#cc6600');
             gradient.addColorStop(0.3, '#994400');
@@ -397,7 +311,6 @@ function drawPrizeLadder() {
             ctx.fillStyle = gradient;
             ctx.fill();
             
-            // Obramowanie jak w przycisku rezygnacji
             ctx.strokeStyle = '#ffaa00';
             ctx.lineWidth = 2;
             ctx.stroke();
@@ -416,14 +329,19 @@ function drawPrizeLadder() {
     });
 }
 
-function drawLifelineCircle(x, y, radius, isActive, text, isBold = false, useWhiteIcon = false) {
+function drawLifelineCircle(x, y, radius, isActive, text, isBold = false, useWhiteIcon = false, isHovered = false) {
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     
     const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
     if (isActive) {
-        gradient.addColorStop(0, 'rgba(0, 153, 255, 0.8)');
-        gradient.addColorStop(1, 'rgba(0, 51, 102, 0.8)');
+        if (isHovered) {
+            gradient.addColorStop(0, 'rgba(51, 153, 255, 0.9)');
+            gradient.addColorStop(1, 'rgba(0, 102, 204, 0.9)');
+        } else {
+            gradient.addColorStop(0, 'rgba(0, 153, 255, 0.8)');
+            gradient.addColorStop(1, 'rgba(0, 51, 102, 0.8)');
+        }
     } else {
         gradient.addColorStop(0, 'rgba(102, 102, 102, 0.3)');
         gradient.addColorStop(1, 'rgba(51, 51, 51, 0.3)');
@@ -432,21 +350,19 @@ function drawLifelineCircle(x, y, radius, isActive, text, isBold = false, useWhi
     ctx.fillStyle = gradient;
     ctx.fill();
     
-    ctx.strokeStyle = isActive ? colors.highlight : '#666666';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = isActive ? (isHovered ? '#66ccff' : colors.highlight) : '#666666';
+    ctx.lineWidth = isHovered ? 3 : 2;
     ctx.stroke();
     
-    // Ustal kolor tekstu - biały dla białej ikony lub standardowy
     let textColor;
     if (useWhiteIcon) {
-        textColor = '#FFFFFF'; // Biały kolor dla ikony publiczności
+        textColor = '#FFFFFF';
     } else {
         textColor = isActive ? colors.text : '#666666';
     }
     
     ctx.fillStyle = textColor;
     
-    // Ustal czy tekst ma być pogrubiony
     const fontWeight = isBold ? 'bold ' : '';
     ctx.font = `${fontWeight}${text.length > 2 ? '14px' : '20px'} Arial`;
     
@@ -454,7 +370,12 @@ function drawLifelineCircle(x, y, radius, isActive, text, isBold = false, useWhi
     ctx.textBaseline = 'middle';
     ctx.fillText(text, x, y);
     
-    if (isActive) {
+    if (isActive && isHovered) {
+        ctx.shadowColor = '#66ccff';
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+    } else if (isActive) {
         ctx.shadowColor = colors.highlight;
         ctx.shadowBlur = 10;
         ctx.stroke();
@@ -473,7 +394,7 @@ function getCurrentQuestion() {
     return null;
 }
 
-// Funkcja sprawdzająca czy kliknięcie było w obszarze koła
+// sprawdza czy kliknięcie było w obszarze koła
 function isClickInCircle(clickX, clickY, circleX, circleY, radius) {
     const distance = Math.sqrt(
         Math.pow(clickX - circleX, 2) + Math.pow(clickY - circleY, 2)
@@ -598,6 +519,74 @@ canvas.addEventListener('click', (e) => {
     }
 });
 
+// Obsługa najechania myszą
+canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Reset wszystkich stanów hover
+    hoveredAnswer = null;
+    hoveredLifeline = null;
+    hoveredQuitButton = false;
+    
+    // Sprawdzanie najechania na odpowiedzi tylko w trybie gry
+    if (gameState === 'playing' && currentQuestion) {
+        answerBoxes.forEach((box, index) => {
+            if (x >= box.x && x <= box.x + box.width &&
+                y >= box.y && y <= box.y + box.height &&
+                currentQuestion.answers[index] !== '') {
+                hoveredAnswer = index;
+            }
+        });
+    }
+    
+    // Sprawdzanie najechania na koła ratunkowe
+    if (gameState === 'playing') {
+        const radius = Math.min(window.innerWidth, window.innerHeight) * 0.045;
+        const spacing = radius * 2.5;
+        const startX = window.innerWidth * 0.05;
+        const startY = window.innerHeight * 0.05 + 20;
+
+        // 50:50
+        if (lifelineFiftyFifty && isClickInCircle(x, y, startX, startY, radius)) {
+            hoveredLifeline = 'fifty';
+        }
+        // Telefon
+        else if (lifelinePhoneFriend && isClickInCircle(x, y, startX + spacing, startY, radius)) {
+            hoveredLifeline = 'phone';
+        }
+        // Publiczność
+        else if (lifelineAskAudience && isClickInCircle(x, y, startX + spacing * 2, startY, radius)) {
+            hoveredLifeline = 'audience';
+        }
+    }
+    
+    // Sprawdzanie najechania na przycisk rezygnacji
+    if (gameState === 'playing' || gameState === 'checking') {
+        const ladderWidth = window.innerWidth * 0.12;
+        const startX = canvas.width - ladderWidth;
+        const buttonWidth = ladderWidth * 0.9;
+        const buttonHeight = window.innerHeight * 0.04;
+        const buttonX = startX + (ladderWidth - buttonWidth) / 2 - 25;
+        const buttonY = window.innerHeight * 0.02 + 20 + (prizeLadder.length * window.innerHeight * 0.035);
+        
+        if (x >= buttonX && x <= buttonX + buttonWidth &&
+            y >= buttonY && y <= buttonY + buttonHeight) {
+            hoveredQuitButton = true;
+        }
+    }
+    
+    // Zmiana kursora
+    if (hoveredAnswer !== null || hoveredLifeline !== null || hoveredQuitButton ||
+        (gameState === 'start' && x >= questionBox.x && x <= questionBox.x + questionBox.width &&
+         y >= questionBox.y && y <= questionBox.y + questionBox.height)) {
+        canvas.style.cursor = 'pointer';
+    } else {
+        canvas.style.cursor = 'default';
+    }
+});
+
 // Sprawdzanie odpowiedzi
 function checkAnswer() {
     if (!currentQuestion) return;
@@ -619,7 +608,8 @@ function checkAnswer() {
             // Nasłuchuj na zakończenie melodii "good"
             const goodSound = sounds.good;
             const onGoodEnded = () => {
-                goodSound.removeEventListener('ended', onGoodEnded);                if (currentQuestionIndex === prizeLadder.length - 1) {
+                goodSound.removeEventListener('ended', onGoodEnded);                
+                if (currentQuestionIndex === prizeLadder.length - 1) {
                     gameState = 'won';
                     const playAgain = confirm('Gratulacje! Wygrałeś milion złotych!\n\nKliknij "OK" aby zagrać ponownie lub "Anuluj" aby zakończyć.');
                     if (playAgain) {
@@ -670,6 +660,9 @@ function startGame() {
 function resetGame() {
     currentQuestionIndex = 0;
     selectedAnswer = null;
+    hoveredAnswer = null;
+    hoveredLifeline = null;
+    hoveredQuitButton = false;
     gameState = 'start'; // Powrót do ekranu startowego
     answerState = '';
     currentQuestion = null;
@@ -682,6 +675,9 @@ function resetGame() {
 function resetGameDirect() {
     currentQuestionIndex = 0;
     selectedAnswer = null;
+    hoveredAnswer = null;
+    hoveredLifeline = null;
+    hoveredQuitButton = false;
     answerState = '';
     currentQuestion = null;
     lifelineFiftyFifty = true;
@@ -715,39 +711,27 @@ function handleQuitButtonClick() {
             resetGame();
         }
     }
-    // Jeśli nie - gra trwa dalej
 }
 
 // Rozpoczęcie gry
 gameLoop();
 
-// Nowa funkcja rysująca ramkę pytania w stylu Milionerów
 function drawMillionaireQuestionBox() {
     const box = questionBox;
     
-    // Kształt hexagonalny jak w oryginalnym programie
     const hexHeight = box.height * 0.3;
     
     ctx.beginPath();
-    // Górna lewa ściana skośna
     ctx.moveTo(box.x + hexHeight, box.y);
-    // Górna prawa ściana prosta
     ctx.lineTo(box.x + box.width - hexHeight, box.y);
-    // Górna prawa ściana skośna
     ctx.lineTo(box.x + box.width, box.y + hexHeight);
-    // Prawa ściana prosta
     ctx.lineTo(box.x + box.width, box.y + box.height - hexHeight);
-    // Dolna prawa ściana skośna
     ctx.lineTo(box.x + box.width - hexHeight, box.y + box.height);
-    // Dolna ściana prosta
     ctx.lineTo(box.x + hexHeight, box.y + box.height);
-    // Dolna lewa ściana skośna
     ctx.lineTo(box.x, box.y + box.height - hexHeight);
-    // Lewa ściana prosta
     ctx.lineTo(box.x, box.y + hexHeight);
     ctx.closePath();
     
-    // Gradient tła w stylu milionerów
     const gradient = ctx.createLinearGradient(box.x, box.y, box.x, box.y + box.height);
     gradient.addColorStop(0, '#1a4d99');
     gradient.addColorStop(0.3, '#0d2666');
@@ -757,16 +741,13 @@ function drawMillionaireQuestionBox() {
     ctx.fillStyle = gradient;
     ctx.fill();
     
-    // Niebieskie obramowanie
     ctx.strokeStyle = '#4da6ff';
     ctx.lineWidth = 3;
     ctx.stroke();
     
-    // Wewnętrzne obramowanie
     ctx.strokeStyle = '#0066cc';
     ctx.lineWidth = 1;
     ctx.stroke();
-      // Tekst pytania
     ctx.fillStyle = colors.text;
     const questionFontSize = Math.min(window.innerWidth * 0.025, 24);
     ctx.font = `bold ${questionFontSize}px Arial`;
@@ -787,11 +768,9 @@ function drawMillionaireQuestionBox() {
             box.width - (padding * 2));
 }
 
-// Nowa funkcja rysująca ramkę odpowiedzi w stylu Milionerów
-function drawMillionaireAnswerBox(box, index, answer, letter, isSelected) {
+function drawMillionaireAnswerBox(box, index, answer, letter, isSelected, isHovered = false) {
     if (answer === '') return;
 
-    // Kolory w zależności od stanu
     let baseColor = '#1a4d99';
     let highlightColor = '#0d2666';
     let borderColor = '#4da6ff';
@@ -826,29 +805,26 @@ function drawMillionaireAnswerBox(box, index, answer, letter, isSelected) {
         baseColor = '#2d6bb3';
         highlightColor = '#1a4080';
         borderColor = '#80ccff';
+    } else if (isHovered && gameState === 'playing') {
+        // Efekt najechania - lekko rozjaśnione kolory
+        baseColor = '#2d5bb3';
+        highlightColor = '#1a3566';
+        borderColor = '#66b3ff';
     }
     
-    // Kształt hexagonalny jak w oryginalnym programie
     const hexHeight = box.height * 0.4;
     
     ctx.beginPath();
-    // Lewa ściana skośna
     ctx.moveTo(box.x, box.y + hexHeight);
     ctx.lineTo(box.x + hexHeight, box.y);
-    // Górna ściana prosta
     ctx.lineTo(box.x + box.width - hexHeight, box.y);
-    // Prawa ściana skośna
     ctx.lineTo(box.x + box.width, box.y + hexHeight);
     ctx.lineTo(box.x + box.width, box.y + box.height - hexHeight);
-    // Prawa dolna ściana skośna
     ctx.lineTo(box.x + box.width - hexHeight, box.y + box.height);
-    // Dolna ściana prosta
     ctx.lineTo(box.x + hexHeight, box.y + box.height);
-    // Lewa dolna ściana skośna
     ctx.lineTo(box.x, box.y + box.height - hexHeight);
     ctx.closePath();
     
-    // Gradient tła
     const gradient = ctx.createLinearGradient(box.x, box.y, box.x, box.y + box.height);
     gradient.addColorStop(0, baseColor);
     gradient.addColorStop(0.3, highlightColor);
@@ -858,13 +834,10 @@ function drawMillionaireAnswerBox(box, index, answer, letter, isSelected) {
     ctx.fillStyle = gradient;
     ctx.fill();
     
-    // Obramowanie
     ctx.strokeStyle = borderColor;
     ctx.lineWidth = isSelected ? 4 : 2;
     ctx.stroke();
     
-        
-    // Tekst odpowiedzi
     ctx.fillStyle = textColor;
     const answerFontSize = Math.min(window.innerWidth * 0.022, 20);
     ctx.font = `bold ${answerFontSize}px Arial`;
@@ -874,7 +847,6 @@ function drawMillionaireAnswerBox(box, index, answer, letter, isSelected) {
     const padding = Math.min(window.innerWidth * 0.025, 25);
     ctx.fillText(`${letter}: ${answer}`, box.x + padding, box.y + (box.height / 2));
     
-    // Efekt świecenia dla wybranej odpowiedzi
     if (isSelected || (gameState === 'checking' && (index === currentQuestion.correct || index === selectedAnswer))) {
         ctx.shadowColor = borderColor;
         ctx.shadowBlur = 15;
@@ -883,66 +855,28 @@ function drawMillionaireAnswerBox(box, index, answer, letter, isSelected) {
     }
 }
 
-// Funkcja rysująca diament
-function drawDiamond(x, y, size, color) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(Math.PI / 4);
-    
-    // Gradient dla diamenta
-    const gradient = ctx.createLinearGradient(-size/2, -size/2, size/2, size/2);
-    gradient.addColorStop(0, color);
-    gradient.addColorStop(0.3, '#ffffff');
-    gradient.addColorStop(0.7, color);
-    gradient.addColorStop(1, color);
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(-size/2, -size/2, size, size);
-    
-    // Obramowanie diamenta
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1;
-    ctx.strokeRect(-size/2, -size/2, size, size);
-    
-    ctx.restore();
-}
 
-// Funkcja rysująca ekran startowy
 function drawStartScreen() {
-    // Rysowanie przycisku "zacznij gre" w miejscu pytania
     drawStartButton();
-    
-    // Rysowanie kredytów w miejscu odpowiedzi
     drawCredits();
 }
 
-// Funkcja rysująca przycisk startowy
 function drawStartButton() {
     const box = questionBox;
     
-    // Kształt hexagonalny jak w oryginalnym programie
     const hexHeight = box.height * 0.3;
     
     ctx.beginPath();
-    // Górna lewa ściana skośna
     ctx.moveTo(box.x + hexHeight, box.y);
-    // Górna prawa ściana prosta
     ctx.lineTo(box.x + box.width - hexHeight, box.y);
-    // Górna prawa ściana skośna
     ctx.lineTo(box.x + box.width, box.y + hexHeight);
-    // Prawa ściana prosta
     ctx.lineTo(box.x + box.width, box.y + box.height - hexHeight);
-    // Dolna prawa ściana skośna
     ctx.lineTo(box.x + box.width - hexHeight, box.y + box.height);
-    // Dolna ściana prosta
     ctx.lineTo(box.x + hexHeight, box.y + box.height);
-    // Dolna lewa ściana skośna
     ctx.lineTo(box.x, box.y + box.height - hexHeight);
-    // Lewa ściana prosta
     ctx.lineTo(box.x, box.y + hexHeight);
     ctx.closePath();
     
-    // Gradient tła w stylu milionerów
     const gradient = ctx.createLinearGradient(box.x, box.y, box.x, box.y + box.height);
     gradient.addColorStop(0, '#1a4d99');
     gradient.addColorStop(0.3, '#0d2666');
@@ -952,17 +886,14 @@ function drawStartButton() {
     ctx.fillStyle = gradient;
     ctx.fill();
     
-    // Niebieskie obramowanie
     ctx.strokeStyle = '#4da6ff';
     ctx.lineWidth = 3;
     ctx.stroke();
     
-    // Wewnętrzne obramowanie
     ctx.strokeStyle = '#0066cc';
     ctx.lineWidth = 1;
     ctx.stroke();
     
-    // Tekst przycisku
     ctx.fillStyle = colors.text;
     const buttonFontSize = Math.min(window.innerWidth * 0.04, 36);
     ctx.font = `bold ${buttonFontSize}px Arial`;
@@ -970,14 +901,12 @@ function drawStartButton() {
     ctx.textBaseline = 'middle';
     ctx.fillText('ZACZNIJ GRĘ', box.x + (box.width / 2), box.y + (box.height / 2));
     
-    // Efekt świecenia
     ctx.shadowColor = colors.highlight;
     ctx.shadowBlur = 15;
     ctx.stroke();
     ctx.shadowBlur = 0;
 }
 
-// Funkcja rysująca kredyty
 function drawCredits() {
     const credits = [
         "Gra stworzona przez:",
@@ -993,29 +922,20 @@ function drawCredits() {
     });
 }
 
-// Funkcja rysująca pojedynczy kredyt
 function drawCreditBox(box, creditText) {
-    // Kształt hexagonalny jak w oryginalnym programie
     const hexHeight = box.height * 0.4;
     
     ctx.beginPath();
-    // Lewa ściana skośna
     ctx.moveTo(box.x, box.y + hexHeight);
     ctx.lineTo(box.x + hexHeight, box.y);
-    // Górna ściana prosta
     ctx.lineTo(box.x + box.width - hexHeight, box.y);
-    // Prawa ściana skośna
     ctx.lineTo(box.x + box.width, box.y + hexHeight);
     ctx.lineTo(box.x + box.width, box.y + box.height - hexHeight);
-    // Prawa dolna ściana skośna
     ctx.lineTo(box.x + box.width - hexHeight, box.y + box.height);
-    // Dolna ściana prosta
     ctx.lineTo(box.x + hexHeight, box.y + box.height);
-    // Lewa dolna ściana skośna
     ctx.lineTo(box.x, box.y + box.height - hexHeight);
     ctx.closePath();
     
-    // Gradient tła
     const gradient = ctx.createLinearGradient(box.x, box.y, box.x, box.y + box.height);
     gradient.addColorStop(0, '#1a4d99');
     gradient.addColorStop(0.3, '#0d2666');
@@ -1025,12 +945,10 @@ function drawCreditBox(box, creditText) {
     ctx.fillStyle = gradient;
     ctx.fill();
     
-    // Obramowanie
     ctx.strokeStyle = '#4da6ff';
     ctx.lineWidth = 2;
     ctx.stroke();
     
-    // Tekst kredytu
     ctx.fillStyle = colors.text;
     const creditFontSize = Math.min(window.innerWidth * 0.02, 18);
     ctx.font = `${creditFontSize}px Arial`;
@@ -1039,7 +957,6 @@ function drawCreditBox(box, creditText) {
     ctx.fillText(creditText, box.x + (box.width / 2), box.y + (box.height / 2));
 }
 
-// Funkcja rysująca przycisk rezygnacji (w stylu kół ratunkowych)
 function drawQuitButton() {
     if (gameState !== 'playing' && gameState !== 'checking') return;
     
@@ -1047,11 +964,9 @@ function drawQuitButton() {
     const startX = canvas.width - ladderWidth;
     const buttonWidth = ladderWidth * 0.9;
     const buttonHeight = window.innerHeight * 0.04;
-    const buttonX = startX + (ladderWidth - buttonWidth) / 2 - 25; // Przesunięcie o 15 pikseli w lewo
-    const buttonY = window.innerHeight * 0.02 + 20 + (prizeLadder.length * window.innerHeight * 0.035); // Pod drabinką z kwotami
-    
-    // Zaokrąglony prostokąt w stylu kół ratunkowych
-    const cornerRadius = buttonHeight * 0.5; // Silnie zaokrąglone rogi
+    const buttonX = startX + (ladderWidth - buttonWidth) / 2 - 25; 
+    const buttonY = window.innerHeight * 0.02 + 20 + (prizeLadder.length * window.innerHeight * 0.035);
+    const cornerRadius = buttonHeight * 0.5;
     
     ctx.beginPath();
     ctx.moveTo(buttonX + cornerRadius, buttonY);
@@ -1065,24 +980,26 @@ function drawQuitButton() {
     ctx.quadraticCurveTo(buttonX, buttonY, buttonX + cornerRadius, buttonY);
     ctx.closePath();
     
-    // Gradient radialny jak w kołach ratunkowych
     const centerX = buttonX + buttonWidth / 2;
     const centerY = buttonY + buttonHeight / 2;
     const radius = Math.max(buttonWidth, buttonHeight) / 2;
     
     const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-    gradient.addColorStop(0, 'rgba(0, 153, 255, 0.8)');
-    gradient.addColorStop(1, 'rgba(0, 51, 102, 0.8)');
+    if (hoveredQuitButton) {
+        gradient.addColorStop(0, 'rgba(51, 153, 255, 0.9)');
+        gradient.addColorStop(1, 'rgba(0, 102, 204, 0.9)');
+    } else {
+        gradient.addColorStop(0, 'rgba(0, 153, 255, 0.8)');
+        gradient.addColorStop(1, 'rgba(0, 51, 102, 0.8)');
+    }
     
     ctx.fillStyle = gradient;
     ctx.fill();
     
-    // Obramowanie jak w kołach ratunkowych
-    ctx.strokeStyle = colors.highlight; // '#0099FF'
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = hoveredQuitButton ? '#66ccff' : colors.highlight;
+    ctx.lineWidth = hoveredQuitButton ? 3 : 2;
     ctx.stroke();
     
-    // Tekst "Rezygnuję" zamiast ikony drzwi
     ctx.fillStyle = colors.text;
     const textSize = Math.min(window.innerWidth * 0.012, 14);
     ctx.font = `bold ${textSize}px Arial`;
@@ -1090,12 +1007,17 @@ function drawQuitButton() {
     ctx.textBaseline = 'middle';
     ctx.fillText('Rezygnuję', centerX, centerY);
     
-    // Efekt świecenia jak w aktywnych kołach ratunkowych
-    ctx.shadowColor = colors.highlight;
-    ctx.shadowBlur = 10;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
+    if (hoveredQuitButton) {
+        ctx.shadowColor = '#66ccff';
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+    } else {
+        ctx.shadowColor = colors.highlight;
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+    }
     
-    // Zwracamy pozycję przycisku dla obsługi kliknięć
     return { x: buttonX, y: buttonY, width: buttonWidth, height: buttonHeight };
 }
