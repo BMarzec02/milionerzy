@@ -24,7 +24,7 @@
 ## 🚀 Uruchomienie
 
 ### 🌐 Gra dostępna online:
-👉 **[milionerzy.pl](https://milionerzy.vercel.app/)**
+👉 **[KLIKNIJ ABY ZAGRAĆ!]([https://milionerzy.vercel.app/](https://www.bartlomiejmarzec.pl/milionerzy))**
 
 ### 💻 Uruchomienie lokalne:
 1.  Sklonuj repozytorium
