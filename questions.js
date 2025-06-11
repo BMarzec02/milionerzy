@@ -16,7 +16,7 @@ window.questionsByPrize = {    500: [
         },
         {
             question: "Który z tych zwierząt to ssak?",
-            answers: ["Rekin", "Delfin", "Orzeł", "Węż"],
+            answers: ["Rekin", "Delfin", "Orzeł", "Wąż"],
             correct: 1
         },
         {
