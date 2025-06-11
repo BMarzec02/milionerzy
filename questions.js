@@ -1,5 +1,4 @@
-window.questionsByPrize = {
-    500: [
+window.questionsByPrize = {    500: [
         {
             question: "Która planeta jest najbliżej Słońca?",
             answers: ["Wenus", "Mars", "Merkury", "Ziemia"],
@@ -16,10 +15,40 @@ window.questionsByPrize = {
             correct: 1
         },
         {
-            question: "Ile minut ma godzina?",
-            answers: ["50", "60", "70", "80"],
+            question: "Który z tych zwierząt to ssak?",
+            answers: ["Rekin", "Delfin", "Orzeł", "Węż"],
             correct: 1
-        }
+        },
+        {
+            question: "Które z tych miast leży nad Wisłą?",
+            answers: ["Poznań", "Warszawa", "Wrocław", "Szczecin"],
+            correct: 1
+        },
+        {
+            question: "Jak nazywa się największy polski port morski?",
+            answers: ["Gdynia", "Gdańsk", "Szczecin", "Świnoujście"],
+            correct: 1
+        },
+        {
+            question: "Który z tych krajów leży w Afryce?",
+            answers: ["Brazylia", "Egipt", "Hiszpania", "Indie"],
+            correct: 1
+        },
+        {
+            question: "Jak nazywa się największy ocean na świecie?",
+            answers: ["Atlantycki", "Spokojny", "Indyjski", "Arktyczny"],
+            correct: 1
+        },
+        {
+            question: "Który z tych języków jest językiem urzędowym w Szwajcarii?",
+            answers: ["Włoski", "Hiszpański", "Rosyjski", "Polski"],
+            correct: 0
+        },
+        {
+            question: "Jak nazywa się największy ssak na świecie?",
+            answers: ["Słoń afrykański", "Płetwal błękitny", "Hipopotam", "Nosorożec"],
+            correct: 1
+        },
     ],    1000: [
         {
             question: "Kto napisał 'Pan Tadeusz'?",
@@ -40,7 +69,67 @@ window.questionsByPrize = {
             question: "Który ocean jest największy?",
             answers: ["Atlantycki", "Indyjski", "Arktyczny", "Spokojny"],
             correct: 3
-        }
+        },
+        {
+            question: "Najwyższa góra świata to:",
+            answers: ["K2", "Mont Blanc", "Mount Everest", "Kilimandżaro"],
+            correct: 2
+        },
+        {
+            question: "W którym kraju leży Rzym?",
+            answers: ["Hiszpania", "Francja", "Grecja", "Włochy"],
+            correct: 3
+        },
+        {
+            question: "Który z tych krajów nie graniczy z Polską?",
+            answers: ["Czechy", "Słowacja", "Węgry", "Niemcy"],
+            correct: 2
+        },
+        {
+            question: "Jak nazywa się najwyższy szczyt w Polsce?",
+            answers: ["Rysy", "Giewont", "Babia Góra", "Śnieżka"],
+            correct: 0
+        },
+        {
+            question: "Który z tych pisarzy był laureatem Nagrody Nobla?",
+            answers: ["Adam Mickiewicz", "Henryk Sienkiewicz", "Juliusz Słowacki", "Bolesław Prus"],
+            correct: 1
+        },
+        {
+            question: "Jak nazywa się największe jezioro w Polsce?",
+            answers: ["Śniardwy", "Mamry", "Hańcza", "Miedwie"],
+            correct: 0
+        },
+        {
+            question: "Który z tych krajów nie należy do Unii Europejskiej?",
+            answers: ["Polska", "Norwegia", "Czechy", "Włochy"],
+            correct: 1
+        },
+        {
+            question: "Jak nazywa się najdłuższa rzeka Europy?",
+            answers: ["Dunaj", "Wołga", "Ren", "Loara"],
+            correct: 1
+        },
+        {
+            question: "Który z tych filmów wyreżyserował Steven Spielberg?",
+            answers: ["Titanic", "Jurassic Park", "Avatar", "Gladiator"],
+            correct: 1
+        },
+        {
+            question: "Jak nazywa się największa wyspa na świecie?",
+            answers: ["Grenlandia", "Madagaskar", "Borneo", "Sumatra"],
+            correct: 0
+        },
+        {
+            question: "Który z tych pierwiastków jest cieczą w temperaturze pokojowej?",
+            answers: ["Rtęć", "Żelazo", "Tlen", "Wapń"],
+            correct: 0
+        },
+        {
+            question: "Jak nazywa się najstarszy uniwersytet w Polsce?",
+            answers: ["Uniwersytet Warszawski", "Uniwersytet Jagielloński", "Politechnika Warszawska", "UMCS"],
+            correct: 1
+        },
     ],    2000: [
         {
             question: "Ile wynosi pierwiastek kwadratowy z 144?",
@@ -53,15 +142,45 @@ window.questionsByPrize = {
             correct: 1
         },
         {
-            question: "Jaki jest symbol chemiczny wody?",
-            answers: ["H2O", "CO2", "NaCl", "O2"],
-            correct: 0
-        },
-        {
             question: "Kto wynalazł żarówkę?",
             answers: ["Nikola Tesla", "Thomas Edison", "Alexander Bell", "Benjamin Franklin"],
             correct: 1
-        }
+        },
+        {
+            question: "Który z tych instrumentów jest instrumentem strunowym?",
+            answers: ["Flet", "Gitara", "Bębny", "Trąbka"],
+            correct: 1
+        },
+        {
+            question: "Ile lat ma dekada?",
+            answers: ["5", "10", "15", "20"],
+            correct: 1
+        },
+        {
+            question: "Który kraj ma kształt buta?",
+            answers: ["Francja", "Hiszpania", "Niemcy", "Włochy"],
+            correct: 3
+        },
+        {
+            question: "Który z tych pierwiastków jest metalem?",
+            answers: ["Tlen", "Wapń", "Azot", "Hel"],
+            correct: 1
+        },
+        {
+            question: "Jak nazywa się stolica województwa małopolskiego?",
+            answers: ["Kraków", "Katowice", "Rzeszów", "Lublin"],
+            correct: 0
+        },
+        {
+            question: "Który z tych wynalazców opatentował żarówkę?",
+            answers: ["Edison", "Tesla", "Bell", "Franklin"],
+            correct: 0
+        },
+        {
+            question: "Jak nazywa się największa pustynia na świecie?",
+            answers: ["Gobi", "Sahara", "Kalahari", "Atakama"],
+            correct: 1
+        },
     ],    5000: [
         {
             question: "Które miasto jest stolicą Polski?",
@@ -74,16 +193,41 @@ window.questionsByPrize = {
             correct: 2
         },
         {
-            question: "Ile wynosi liczba Pi (w przybliżeniu)?",
-            answers: ["2.14", "3.14", "4.14", "5.14"],
-            correct: 1
-        },
-        {
             question: "W którym kraju znajduje się Wielki Kanion?",
             answers: ["Kanada", "Meksyk", "USA", "Brazylia"],
             correct: 2
-        }
-    ],    10000: [
+        },
+        {
+            question: "W którym roku Kolumb odkrył Amerykę?",
+            answers: ["1490", "1492", "1494", "1496"],
+            correct: 1
+        },
+        {
+            question: "Która planeta jest największa w Układzie Słonecznym?",
+            answers: ["Saturn", "Jowisz", "Neptun", "Uran"],
+            correct: 1
+        },
+        {
+            question: "Który z tych krajów leży w Ameryce Południowej?",
+            answers: ["Hiszpania", "Brazylia", "Portugalia", "Włochy"],
+            correct: 1
+        },
+        {
+            question: "Jak nazywa się najdłuższa rzeka w Polsce?",
+            answers: ["Odra", "Wisła", "Warta", "Bug"],
+            correct: 1
+        },
+        {
+            question: "Który z tych malarzy był impresjonistą?",
+            answers: ["Monet", "Picasso", "Van Gogh", "Dali"],
+            correct: 0
+        },
+        {
+            question: "Jak nazywa się największa planeta Układu Słonecznego?",
+            answers: ["Saturn", "Jowisz", "Mars", "Ziemia"],
+            correct: 1
+        },
+    ],10000: [
         {
             question: "Który z tych pierwiastków jest gazem szlachetnym?",
             answers: ["Tlen", "Neon", "Wodór", "Chlor"],
@@ -172,11 +316,6 @@ window.questionsByPrize = {
             question: "Który pierwiastek chemiczny ma symbol 'Au'?",
             answers: ["Srebro", "Platyna", "Złoto", "Miedź"],
             correct: 2
-        },
-        {
-            question: "Ile wynosi liczba Avogadra?",
-            answers: ["6.022 × 10²³", "3.14 × 10²³", "9.81 × 10²³", "2.998 × 10²³"],
-            correct: 0
         },
         {
             question: "Kto opracował teorię ewolucji?",
